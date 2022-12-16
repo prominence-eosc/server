@@ -4,20 +4,12 @@ import json
 import signal
 import sys
 
-import logging
-from logging.handlers import RotatingFileHandler
-
 import nats
 
 from prominence.database import Database
-from prominence.utilities import config
+from prominence.utilities import config, set_logger
 
-handler = RotatingFileHandler(config().get('job_monitor', 'log'), maxBytes=10485760, backupCount=10)
-formatter = logging.Formatter('%(asctime)s %(levelname)s [%(name)s] %(message)s')
-handler.setFormatter(formatter)
-logger = logging.getLogger()
-logger.addHandler(handler)
-logger.setLevel(logging.INFO)
+logger = set_logger(config().get('job_monitor', 'log'))
 
 def update_job(job, data):
     """

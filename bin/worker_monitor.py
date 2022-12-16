@@ -10,14 +10,9 @@ from logging.handlers import RotatingFileHandler
 import nats
 
 from prominence.database import Database
-from prominence.utilities import config
+from prominence.utilities import config, set_logger
 
-handler = RotatingFileHandler(config().get('worker_monitor', 'log'), maxBytes=10485760, backupCount=10)
-formatter = logging.Formatter('%(asctime)s %(levelname)s [%(name)s] %(message)s')
-handler.setFormatter(formatter)
-logger = logging.getLogger()
-logger.addHandler(handler)
-logger.setLevel(logging.INFO)
+logger = set_logger(config().get('worker_monitor', 'log'))
 
 async def run():
     async def subscribe_handler(msg):

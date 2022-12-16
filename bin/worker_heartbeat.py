@@ -5,14 +5,9 @@ import logging
 from logging.handlers import RotatingFileHandler
 
 from prominence.database import Database
-from prominence.utilities import config
+from prominence.utilities import config, set_logger
 
-handler = RotatingFileHandler(config().get('worker_heartbeat', 'log'), maxBytes=10485760, backupCount=10)
-formatter = logging.Formatter('%(asctime)s %(levelname)s [%(name)s] %(message)s')
-handler.setFormatter(formatter)
-logger = logging.getLogger()
-logger.addHandler(handler)
-logger.setLevel(logging.INFO)
+logger = set_logger(config().get('worker_heartbeat', 'log'))
 
 def checks():
     """
