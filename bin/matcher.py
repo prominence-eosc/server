@@ -44,10 +44,6 @@ def matcher():
         idle_jobs.append(job)
     logger.info('There are %d idle jobs', len(idle_jobs))
 
-    # TO DO: order jobs by:
-    # - submission date
-    # - priority
-
     logger.info('Getting workers...')
     workers = db.get_workers()
     idle_workers = []
@@ -55,10 +51,6 @@ def matcher():
     for worker in workers:
         idle_workers.append(worker)
         workers_resources[worker['name']] = worker['resources']['available']
-
-    # TO DO:
-    # - take into account placement policies
-    # - take into account CPU arch etc
 
     logger.info('Matching...')
     for job in idle_jobs:
