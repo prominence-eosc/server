@@ -9,6 +9,7 @@ import time
 import shortuuid
 
 from prominence.models import Job, JobOutput
+from prominence.utilities import config
 import prominence.database as database
 
 router = APIRouter(
@@ -38,7 +39,7 @@ async def create_job(job: Job = Body(...)):
     response_model=List[JobOutput],
     response_model_exclude_none=True,
 )
-async def list_jobs():
+def list_jobs():
     """
     List jobs
     """
@@ -55,7 +56,7 @@ async def describe_job(id: str):
     """
     Describe a single job
     """
-    job = db.describe_job(id)
+    job = db.get_job(id)
     if job:
         return job
     raise HTTPException(status_code=404, detail=f"Job {id} not found")
@@ -69,7 +70,7 @@ def get_stdout(id: str):
     """
     Return the job standard output
     """
-    filename = '/tmp/job.stdout.%s' % id
+    filename = f"{config().get('job_logger', 'directory')}/job.stdout.{id}"
 
     if os.path.exists(filename):
         with open(filename, 'rb') as fd:
@@ -86,7 +87,7 @@ def get_stderr(id: str):
     """
     Return the job standard output
     """
-    filename = '/tmp/job.stderr.%s' % id
+    filename = f"{config().get('logger', 'directory')}/job.stderr.{id}"
 
     if os.path.exists(filename):
         with open(filename, 'rb') as fd:
