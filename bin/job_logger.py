@@ -13,7 +13,7 @@ async def run():
         subject = msg.subject
         reply = msg.reply
         data = msg.data.decode()
-        with open(f"{config().get('logger', 'directory')}/{subject}", 'a') as fh:
+        with open(f"{config().get('job_logger', 'directory')}/{subject}", 'a') as fh:
             fh.write(data)
 
     nc = None
