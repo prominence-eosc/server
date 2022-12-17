@@ -24,6 +24,9 @@ router = APIRouter(
 db = database.Database()
 
 async def send_delete(worker_id, job):
+    """
+    Send delete message to worker
+    """
     nc = await nats.connect(config().get('nats', 'url'))
     data = {'delete': job}
     data = json.dumps(data).encode('utf-8')
