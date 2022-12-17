@@ -20,7 +20,7 @@ logger = set_logger(config().get('matcher', 'log'))
 db = Database()
 
 async def send(id, job):
-    nc = await nats.connect(config().get('server', 'nats'))
+    nc = await nats.connect(config().get('nats', 'url'))
     data = json.dumps(job).encode('utf-8')
     await nc.publish("worker.job.%s" % id, data)
 
