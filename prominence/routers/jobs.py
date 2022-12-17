@@ -49,7 +49,7 @@ def list_jobs():
 @router.get(
     "/{id}",
     response_description="Get a single job",
-    response_model=Job,
+    response_model=JobOutput,
     response_model_exclude_none=True
 )
 async def describe_job(id: str):
