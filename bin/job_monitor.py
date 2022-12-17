@@ -11,9 +11,20 @@ from prominence.utilities import config, set_logger
 
 logger = set_logger(config().get('job_monitor', 'log'))
 
-def update_job(job, data):
+def update_job_start(job, data):
     """
     Update job details
+    """
+    if 'execution' not in job:
+        job['execution'] = {}
+
+    job['execution']['worker'] = data['worker']
+
+    return job
+
+def update_job(job, data):
+    """
+    Update job details for a job in a terminal state
     """
     if 'execution' not in job:
         job['execution'] = {}
@@ -48,6 +59,7 @@ async def run():
             logger.info('Job %s status set to running', data['id'])
             job['events']['startTime'] = data['epoch']
             job['status'] = 'running'
+            job = update_job_start(job, data)
             job.save()
         elif data['event'] == 'success':
             logger.info('Job %s status set to completed', data['id'])
