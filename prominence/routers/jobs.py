@@ -1,12 +1,16 @@
 """API endpoint for managing jobs"""
+import json
 import os
+import asyncio
+import time
+import shortuuid
 from fastapi import APIRouter, Body, HTTPException, status
 from fastapi.responses import Response, JSONResponse
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import PlainTextResponse
 from typing import List
-import time
-import shortuuid
+
+import nats
 
 from prominence.models import Job, JobOutput
 from prominence.utilities import config
@@ -18,6 +22,12 @@ router = APIRouter(
 )
 
 db = database.Database()
+
+async def send_delete(worker_id, job):
+    nc = await nats.connect(config().get('nats', 'url'))
+    data = {'delete': job}
+    data = json.dumps(data).encode('utf-8')
+    await nc.publish("worker.job.%s" % worker_id, data)
 
 @router.post("/", response_description="Create a job")
 async def create_job(job: Job = Body(...)):
@@ -101,4 +111,11 @@ def delete_job(id: str):
     Delete job
     """
     db.delete_job(id)
+    job = db.get_job(id)
+    try:
+        worker = job['execution']['worker']
+        asyncio.run(send_delete(worker, job))
+    except:
+        return JSONResponse(status_code=400, content={})
+
     return JSONResponse(status_code=200, content={})
