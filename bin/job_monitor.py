@@ -67,10 +67,10 @@ async def run():
             job['status'] = 'completed'
             job = update_job(job, data)
             job.save()
-        elif data['event'] == 'failed':
-            logger.info('Job %s status set to failed', data['id'])
+        elif data['event'] in ('failed', 'killed', 'deleted'):
+            logger.info('Job %s status set to %s', data['id'], data['event'])
             job['events']['endTime'] = data['epoch']
-            job['status'] = 'failed'
+            job['status'] = data['event']
             job = update_job(job, data)
             job.save()
 
