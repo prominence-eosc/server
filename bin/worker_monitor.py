@@ -37,8 +37,8 @@ async def run():
                                 reconnected_cb=reconnected_cb,
                                 closed_cb=closed_cb,
                                 error_cb=error_cb)
-    except Exception as e:
-        logger.error('Got exception connecting to NATS: %s', str(e))
+    except Exception as err:
+        logger.error('Got exception connecting to NATS: %s', str(err))
         sys.exit(1)
 
     def signal_handler():
