@@ -9,7 +9,7 @@ import nats
 from prominence.database import Database
 from prominence.utilities import config, set_logger
 
-logger = set_logger(config().get('job_monitor', 'log'))
+logger = set_logger(config().get('job_handler', 'log'))
 
 def update_job_start(job, data):
     """

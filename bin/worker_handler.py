@@ -12,7 +12,7 @@ import nats
 from prominence.database import Database
 from prominence.utilities import config, set_logger
 
-logger = set_logger(config().get('worker_monitor', 'log'))
+logger = set_logger(config().get('worker_handler', 'log'))
 
 async def run():
     async def error_cb(err):
