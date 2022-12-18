@@ -1,16 +1,8 @@
-import configparser
-import socket
-import psutil
+"""Match jobs to workers"""
 import asyncio
 import json
-import os
 import time
-import sqlite3
-import uuid
-import sys
-import re, uuid
 import nats
-from nats.errors import ConnectionClosedError, TimeoutError, NoServersError
 
 from prominence.database import Database
 from prominence.utilities import config, set_logger
@@ -26,6 +18,7 @@ async def send(id, job):
 
 def matcher():
     """
+    Match idle jobs to workers
     """
     logger.info('Starting matching...')
 
@@ -50,12 +43,12 @@ def matcher():
             if (workers_resources[worker['name']]['cpus'] >= job['resources']['cpus'] and
                 workers_resources[worker['name']]['memory'] >= job['resources']['memory'] and
                 workers_resources[worker['name']]['disk'] >= job['resources']['disk']):
-                   logger.info('Job %s matched to worker %s', job['id'], worker['name'])
-                   asyncio.run(send(worker['name'], {'create': job}))
-                   workers_resources[worker['name']]['cpus'] -= job['resources']['cpus']
-                   workers_resources[worker['name']]['memory'] -= job['resources']['memory']
-                   workers_resources[worker['name']]['disk'] -= job['resources']['disk']
-                   break
+                logger.info('Job %s matched to worker %s', job['id'], worker['name'])
+                asyncio.run(send(worker['name'], {'create': job}))
+                workers_resources[worker['name']]['cpus'] -= job['resources']['cpus']
+                workers_resources[worker['name']]['memory'] -= job['resources']['memory']
+                workers_resources[worker['name']]['disk'] -= job['resources']['disk']
+                break
 
     logger.info('Finished')
 
