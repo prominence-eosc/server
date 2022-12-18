@@ -9,7 +9,6 @@ from logging.handlers import RotatingFileHandler
 
 import nats
 
-from prominence.database import Database
 from prominence.utilities import config, set_logger
 
 logger = set_logger(config().get('worker_handler', 'log'))
@@ -27,13 +26,6 @@ async def run():
     async def closed_cb():
         logger.error('Stopped reconnection to NATS')
 
-    async def subscribe_handler(msg):
-        data = msg.data.decode()
-        data = json.loads(data)
-        logger.info('Updating worker %s', data['name'])
-        db = Database()
-        db.add_or_update_worker(data)
-
     nc = None
     try:
         nc = await nats.connect(config().get('nats', 'url'),
@@ -44,6 +36,15 @@ async def run():
     except Exception as err:
         logger.error('Got exception connecting to NATS: %s', str(err))
         sys.exit(1)
+
+    async def subscribe_handler(msg):
+        data = msg.data.decode()
+        data = json.loads(data)
+        logger.info('Updating worker %s', data['name'])
+
+        js = nc.jetstream()
+        kv = await js.key_value(bucket=config().get('nats', 'workers_bucket'))
+        await kv.put(data['name'], (json.dumps(data)).encode('utf-8'))
 
     def signal_handler():
         if nc.is_closed:
