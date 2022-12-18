@@ -48,8 +48,8 @@ def update_job(job, data):
     return job
 
 async def run():
-    async def error_cb(e):
-        logger.error(e)
+    async def error_cb(err):
+        logger.error(err)
 
     async def disconnected_cb():
         logger.error('Got disconnected from NATS')
