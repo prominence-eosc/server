@@ -48,6 +48,15 @@ def update_job(job, data):
     return job
 
 async def run():
+    async def error_cb(e):
+        logger.error(e)
+
+    async def reconnected_cb():
+        logger.error('Got reconnected to NATS')
+
+    async def closed_cb():
+        logger.error('Stopped reconnection to NATS')
+
     async def subscribe_handler(msg):
         data = msg.data.decode()
         data = json.loads(data)
@@ -76,7 +85,10 @@ async def run():
 
     nc = None
     try:
-        nc = await nats.connect(config().get('nats', 'url'))
+        nc = await nats.connect(config().get('nats', 'url'),
+                                reconnected_cb=reconnected_cb,
+                                closed_cb=closed_cb,
+                                error_cb=error_cb)
     except Exception as err:
         logger.error('Got exception connecting to NATS: %s', str(err))
         sys.exit(1)
