@@ -20,7 +20,6 @@ async def run():
 
     async def subscribe_handler(msg):
         subject = msg.subject
-        reply = msg.reply
         data = msg.data.decode()
         with open(f"{config().get('job_logger', 'directory')}/{subject}", 'a') as fh:
             fh.write(data)
