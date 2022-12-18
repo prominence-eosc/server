@@ -12,6 +12,9 @@ async def run():
     async def error_cb(e):
         logger.error(e)
 
+    async def disconnected_cb():
+        logger.error('Got disconnected from NATS')
+
     async def reconnected_cb():
         logger.error('Got reconnected to NATS')
 
@@ -27,6 +30,7 @@ async def run():
     nc = None
     try:
         nc = await nats.connect(config().get('nats', 'url'),
+                                disconnected_cb=disconnected_cb,
                                 reconnected_cb=reconnected_cb,
                                 closed_cb=closed_cb,
                                 error_cb=error_cb)
