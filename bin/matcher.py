@@ -1,6 +1,7 @@
 """Match jobs to workers"""
 import asyncio
 import json
+import sys
 import time
 import nats
 
@@ -11,15 +12,22 @@ logger = set_logger(config().get('matcher', 'log'))
 
 db = Database()
 
-async def send(id, job):
-    nc = await nats.connect(config().get('nats', 'url'))
-    data = json.dumps(job).encode('utf-8')
-    await nc.publish("worker.job.%s" % id, data)
-
-def matcher():
+async def matcher():
     """
     Match idle jobs to workers
     """
+    async def error_cb(err):
+        logger.error(err)
+
+    async def disconnected_cb():
+        logger.error('Got disconnected from NATS')
+
+    async def reconnected_cb():
+        logger.error('Got reconnected to NATS')
+
+    async def closed_cb():
+        logger.error('Stopped reconnection to NATS')
+
     logger.info('Starting matching...')
 
     logger.info('Getting idle jobs...')
@@ -30,16 +38,35 @@ def matcher():
     logger.info('There are %d idle jobs', len(idle_jobs))
 
     logger.info('Getting workers...')
-    workers = db.get_workers()
-    idle_workers = []
+    nc = None
+    try:
+        nc = await nats.connect(config().get('nats', 'url'),
+                                disconnected_cb=disconnected_cb,
+                                reconnected_cb=reconnected_cb,
+                                closed_cb=closed_cb,
+                                error_cb=error_cb)
+    except Exception as err:
+        logger.error('Got exception connecting to NATS: %s', str(err))
+        sys.exit(1)
+
+    async def send(id, job):
+        data = json.dumps(job).encode('utf-8')
+        await nc.publish("worker.job.%s" % id, data)
+
+    js = nc.jetstream()
+    kv = await js.key_value(bucket=config().get('nats', 'workers_bucket'))
+    worker_ids = await kv.keys()
+    workers = []
     workers_resources = {}
-    for worker in workers:
-        idle_workers.append(worker)
+    for worker in worker_ids:
+        entry = await kv.get(worker)
+        worker = json.loads(entry.value)
+        workers.append(worker)
         workers_resources[worker['name']] = worker['resources']['available']
 
     logger.info('Matching...')
     for job in idle_jobs:
-        for worker in idle_workers:
+        for worker in workers:
             if (workers_resources[worker['name']]['cpus'] >= job['resources']['cpus'] and
                 workers_resources[worker['name']]['memory'] >= job['resources']['memory'] and
                 workers_resources[worker['name']]['disk'] >= job['resources']['disk']):
@@ -51,10 +78,11 @@ def matcher():
                 break
 
     logger.info('Finished')
+    await nc.close()
 
 def main():
     while True:
-        matcher()
+        asyncio.run(matcher())
         time.sleep(int(config().get('matcher', 'interval')))
 
 if __name__ == '__main__':
