@@ -55,7 +55,12 @@ async def matcher():
 
     js = nc.jetstream()
     kv = await js.key_value(bucket=config().get('nats', 'workers_bucket'))
-    worker_ids = await kv.keys()
+    worker_ids = []
+    try:
+        worker_ids = await kv.keys()
+    except:
+        logger.info('No workers found')
+        pass
     workers = []
     workers_resources = {}
     for worker in worker_ids:
@@ -71,7 +76,7 @@ async def matcher():
                 workers_resources[worker['name']]['memory'] >= job['resources']['memory'] and
                 workers_resources[worker['name']]['disk'] >= job['resources']['disk']):
                 logger.info('Job %s matched to worker %s', job['id'], worker['name'])
-                asyncio.run(send(worker['name'], {'create': job}))
+                await send(worker['name'], {'create': job})
                 workers_resources[worker['name']]['cpus'] -= job['resources']['cpus']
                 workers_resources[worker['name']]['memory'] -= job['resources']['memory']
                 workers_resources[worker['name']]['disk'] -= job['resources']['disk']
