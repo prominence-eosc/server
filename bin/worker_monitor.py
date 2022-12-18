@@ -15,8 +15,8 @@ from prominence.utilities import config, set_logger
 logger = set_logger(config().get('worker_monitor', 'log'))
 
 async def run():
-    async def error_cb(e):
-        logger.error(e)
+    async def error_cb(err):
+        logger.error(err)
 
     async def reconnected_cb():
         logger.error('Got reconnected to NATS')
