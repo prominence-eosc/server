@@ -4,7 +4,7 @@ import os
 import asyncio
 import time
 import shortuuid
-from fastapi import APIRouter, Body, HTTPException, status
+from fastapi import APIRouter, Body, HTTPException, status, Request
 from fastapi.responses import Response, JSONResponse
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import PlainTextResponse
@@ -52,11 +52,11 @@ async def create_job(job: Job = Body(...)):
     response_model=List[JobOutput],
     response_model_exclude_none=True,
 )
-def list_jobs():
+def list_jobs(status: str = None):
     """
     List jobs
     """
-    jobs_list = db.list_jobs()
+    jobs_list = db.list_jobs(status)
     return jobs_list
 
 @router.get(
