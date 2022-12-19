@@ -47,6 +47,31 @@ def update_job(job, data):
 
     return job
 
+def subscribe_handler(data):
+    data = json.loads(data)
+    logger.info('Updating job %s', data['id'])
+    db = Database()
+    job = db.get_job(data['id'], False)
+
+    if data['event'] == 'start':
+        logger.info('Job %s status set to running', data['id'])
+        job['events']['startTime'] = data['epoch']
+        job['status'] = 'running'
+        job = update_job_start(job, data)
+        job.save()
+    elif data['event'] == 'success':
+        logger.info('Job %s status set to completed', data['id'])
+        job['events']['endTime'] = data['epoch']
+        job['status'] = 'completed'
+        job = update_job(job, data)
+        job.save()
+    elif data['event'] in ('failed', 'killed', 'deleted'):
+        logger.info('Job %s status set to %s', data['id'], data['event'])
+        job['events']['endTime'] = data['epoch']
+        job['status'] = data['event']
+        job = update_job(job, data)
+        job.save()
+
 async def run():
     async def error_cb(err):
         logger.error(err)
@@ -59,32 +84,6 @@ async def run():
 
     async def closed_cb():
         logger.error('Stopped reconnection to NATS')
-
-    async def subscribe_handler(msg):
-        data = msg.data.decode()
-        data = json.loads(data)
-        logger.info('Updating job %s', data['id'])
-        db = Database()
-        job = db.get_job(data['id'], False)
-
-        if data['event'] == 'start':
-            logger.info('Job %s status set to running', data['id'])
-            job['events']['startTime'] = data['epoch']
-            job['status'] = 'running'
-            job = update_job_start(job, data)
-            job.save()
-        elif data['event'] == 'success':
-            logger.info('Job %s status set to completed', data['id'])
-            job['events']['endTime'] = data['epoch']
-            job['status'] = 'completed'
-            job = update_job(job, data)
-            job.save()
-        elif data['event'] in ('failed', 'killed', 'deleted'):
-            logger.info('Job %s status set to %s', data['id'], data['event'])
-            job['events']['endTime'] = data['epoch']
-            job['status'] = data['event']
-            job = update_job(job, data)
-            job.save()
 
     nc = None
     try:
@@ -105,7 +104,20 @@ async def run():
     for sig in ('SIGINT', 'SIGTERM'):
         asyncio.get_running_loop().add_signal_handler(getattr(signal, sig), signal_handler)
 
-    await nc.subscribe("job.status.*", cb=subscribe_handler)
+    js = nc.jetstream()
+    sub = await js.subscribe("jobs.*.events", durable="job-handler")
+
+    while True:
+        try:
+            msg = await sub.next_msg()
+            await msg.ack()
+            subscribe_handler(msg.data.decode())
+        except Exception as err:
+            if 'timeout' not in str(err):
+                logger.error(str(err))
+            pass
+
+    await nc.close()
 
 
 def main():
