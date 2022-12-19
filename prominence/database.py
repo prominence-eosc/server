@@ -22,11 +22,14 @@ class Database(object):
         doc._key = job['id']
         doc.save()
 
-    def list_jobs(self):
+    def list_jobs(self, status=None):
         """
         List jobs
         """
-        jobs = self._db.AQLQuery('FOR job IN jobs RETURN job', rawResults=True)
+        filter = ''
+        if status:
+            filter = 'FILTER job.status == "%s"' % status
+        jobs = self._db.AQLQuery(f"FOR job IN jobs {filter} RETURN job", rawResults=True)
         jobs_list = []
         for job in jobs:
             jobs_list.append(job)
@@ -61,3 +64,12 @@ class Database(object):
         job = self._jobs.fetchDocument(id)
         job['status'] = status
         job.save()
+
+    def metrics(self):
+        """
+        Job metrics
+        """
+        running_jobs = self._db.AQLQuery('FOR job IN jobs FILTER job.status == "running" COLLECT WITH COUNT INTO length RETURN length', rawResults=True)[0]
+        pending_jobs = self._db.AQLQuery('FOR job IN jobs FILTER job.status == "pending" COLLECT WITH COUNT INTO length RETURN length', rawResults=True)[0]
+
+        return running_jobs, pending_jobs
