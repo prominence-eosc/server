@@ -53,3 +53,11 @@ class Database(object):
         """
         jobs = self._db.AQLQuery('FOR job IN jobs FILTER job.status == "pending" RETURN job', rawResults=True)
         return jobs
+
+    def update_status(self, id, status):
+        """
+        Update job status
+        """
+        job = self._jobs.fetchDocument(id)
+        job['status'] = status
+        job.save()
