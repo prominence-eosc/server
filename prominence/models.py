@@ -23,6 +23,7 @@ class JobStatus(str, Enum):
     Possible job states
     """
     pending = "pending"
+    assigned = "assigned"
     running = "running"
     completed = "completed"
     failed = "failed"
