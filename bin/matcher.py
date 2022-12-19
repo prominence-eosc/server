@@ -29,6 +29,7 @@ async def matcher():
         logger.error('Stopped reconnection to NATS')
 
     logger.info('Starting matching...')
+    start_time = time.time()
 
     logger.info('Getting idle jobs...')
     jobs = db.get_pending_jobs()
@@ -83,7 +84,7 @@ async def matcher():
                 workers_resources[worker['name']]['disk'] -= job['resources']['disk']
                 break
 
-    logger.info('Finished')
+    logger.info('Finished, took %f secs', time.time() - start_time)
     await nc.close()
 
 def main():
