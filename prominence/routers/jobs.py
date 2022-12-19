@@ -83,7 +83,7 @@ def get_stdout(id: str):
     """
     Return the job standard output
     """
-    filename = f"{config().get('job_logger', 'directory')}/job.stdout.{id}"
+    filename = f"{config().get('job_logger', 'directory')}/jobs.{id}.stdout"
 
     if os.path.exists(filename):
         with open(filename, 'rb') as fd:
@@ -100,7 +100,7 @@ def get_stderr(id: str):
     """
     Return the job standard output
     """
-    filename = f"{config().get('logger', 'directory')}/job.stderr.{id}"
+    filename = f"{config().get('job_logger', 'directory')}/jobs.{id}.stderr"
 
     if os.path.exists(filename):
         with open(filename, 'rb') as fd:

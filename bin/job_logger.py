@@ -8,6 +8,12 @@ from prominence.utilities import config, set_logger
 
 logger = set_logger(config().get('job_logger', 'log'))
 
+def write_log(msg):
+    subject = msg.subject
+    data = msg.data.decode()
+    with open(f"{config().get('job_logger', 'directory')}/{subject}", 'a') as fh:
+        fh.write(data)
+
 async def run():
     async def error_cb(err):
         logger.error(err)
@@ -20,12 +26,6 @@ async def run():
 
     async def closed_cb():
         logger.error('Stopped reconnection to NATS')
-
-    async def subscribe_handler(msg):
-        subject = msg.subject
-        data = msg.data.decode()
-        with open(f"{config().get('job_logger', 'directory')}/{subject}", 'a') as fh:
-            fh.write(data)
 
     nc = None
     try:
@@ -46,7 +46,20 @@ async def run():
     for sig in ('SIGINT', 'SIGTERM'):
         asyncio.get_running_loop().add_signal_handler(getattr(signal, sig), signal_handler)
 
-    await nc.subscribe(f"job.{sys.argv[1]}.*", cb=subscribe_handler)
+    js = nc.jetstream()
+    sub = await js.subscribe(f"jobs.*.{sys.argv[1]}", durable=f"job-{sys.argv[1]}-handler")
+
+    while True:
+        try:
+            msg = await sub.next_msg()
+            await msg.ack()
+            write_log(msg)
+        except Exception as err:
+            if 'timeout' not in str(err):
+                logger.error(str(err))
+            pass
+
+    await nc.close()
 
 
 def main():
