@@ -32,6 +32,15 @@ class JobStatus(str, Enum):
     killed = "killed"
 
 
+class ImagePullStatus(str, Enum):
+    """
+    Possible image pull states
+    """
+    completed = "completed"
+    cached = "cached"
+    failed = "failed"
+
+
 class Resources(BaseModel):
     """
     Resources required by the job
@@ -49,6 +58,8 @@ class TaskExecution(BaseModel):
     """
     exitCode: int = Field(..., title="exitCode", description="Exit code")
     retries: int = Field(..., title="retries", description="Number of retries")
+    imagePullStatus: Optional[ImagePullStatus] = Field(
+        ..., title="imagePullStatus", description="Image pull status")
     imagePullTime: Optional[float] = Field(
         ..., title="imagePullTime", description="Image pull time"
     )
