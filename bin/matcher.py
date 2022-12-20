@@ -75,7 +75,8 @@ async def matcher():
         for worker in workers:
             if (workers_resources[worker['name']]['cpus'] >= job['resources']['cpus'] and
                 workers_resources[worker['name']]['memory'] >= job['resources']['memory'] and
-                workers_resources[worker['name']]['disk'] >= job['resources']['disk']):
+                workers_resources[worker['name']]['disk'] >= job['resources']['disk'] and
+                worker['status'] == 'ready'):
                 logger.info('Job %s matched to worker %s', job['id'], worker['name'])
                 await send(worker['name'], {'create': job})
                 db.update_status(job['id'], 'assigned')
