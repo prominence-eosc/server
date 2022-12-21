@@ -50,6 +50,7 @@ def update_job(job, data):
 def subscribe_handler(data):
     data = json.loads(data)
     logger.info('Updating job %s', data['id'])
+
     db = Database()
     job = db.get_job(data['id'], False)
 
@@ -70,6 +71,20 @@ def subscribe_handler(data):
         job['events']['endTime'] = data['epoch']
         job['status'] = data['event']
         job = update_job(job, data)
+
+        # Handle job retries
+        maximum_retries = 0
+        retries = 0
+        if 'policies' in job:
+            if 'maximumRetries' in job['policies']:
+                maximum_retries = job['policies']['maximumRetries']
+        if 'execution' in job:
+            if 'retries' in job['execution']:
+                retries = job['execution']['retries']
+
+        if maximum_retries > 0 and retries < maximum_retries:
+            job['status'] = 'pending'
+
         job.save()
 
 async def run():
