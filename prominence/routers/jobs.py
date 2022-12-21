@@ -40,8 +40,8 @@ async def create_job(job: Job = Body(...)):
     job = jsonable_encoder(job)
     job['id'] = shortuuid.uuid()
     job['status'] = 'pending'
-    job['events'] = {}
-    job['events']['createTime'] = time.time()
+    job['events'] = []
+    job['events'].append({'time': time.time(), 'type': 'created'})
     job['execution'] = {}
     job['execution']['retries'] = 0
     db.create_job(job)
