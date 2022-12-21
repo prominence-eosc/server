@@ -77,11 +77,13 @@ def subscribe_handler(data):
         maximum_retries = 0
         retries = 0
         if 'policies' in job:
-            if 'maximumRetries' in job['policies']:
-                maximum_retries = job['policies']['maximumRetries']
+            if job['policies']:
+                if 'maximumRetries' in job['policies']:
+                    maximum_retries = job['policies']['maximumRetries']
         if 'execution' in job:
-            if 'retries' in job['execution']:
-                retries = job['execution']['retries']
+            if job['execution']:
+                if 'retries' in job['execution']:
+                    retries = job['execution']['retries']
 
         if maximum_retries > 0 and retries < maximum_retries:
             job['status'] = 'pending'
