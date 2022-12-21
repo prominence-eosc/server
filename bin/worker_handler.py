@@ -38,8 +38,7 @@ async def run():
         sys.exit(1)
 
     async def subscribe_handler(msg):
-        data = msg.data.decode()
-        data = json.loads(data)
+        data = json.loads(msg.data.decode())
         logger.info('Updating worker %s', data['name'])
 
         js = nc.jetstream()
