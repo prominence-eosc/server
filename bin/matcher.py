@@ -61,22 +61,24 @@ async def matcher():
         worker_ids = await kv.keys()
     except:
         logger.info('No workers found')
-        pass
     workers = []
     workers_resources = {}
     for worker in worker_ids:
-        entry = await kv.get(worker)
-        worker = json.loads(entry.value)
-        workers.append(worker)
-        workers_resources[worker['name']] = worker['resources']['available']
+        try:
+            entry = await kv.get(worker)
+            worker = json.loads(entry.value)
+            if worker['status'] == 'ready':
+                workers.append(worker)
+                workers_resources[worker['name']] = worker['resources']['available']
+        except:
+            pass
 
     logger.info('Matching...')
     for job in idle_jobs:
         for worker in workers:
             if (workers_resources[worker['name']]['cpus'] >= job['resources']['cpus'] and
                 workers_resources[worker['name']]['memory'] >= job['resources']['memory'] and
-                workers_resources[worker['name']]['disk'] >= job['resources']['disk'] and
-                worker['status'] == 'ready'):
+                workers_resources[worker['name']]['disk'] >= job['resources']['disk']):
                 logger.info('Job %s matched to worker %s', job['id'], worker['name'])
                 await send(worker['name'], {'create': job})
                 db.update_status(job['id'], 'assigned')
