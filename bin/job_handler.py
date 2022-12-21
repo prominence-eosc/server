@@ -3,6 +3,7 @@ import asyncio
 import json
 import signal
 import sys
+import time
 
 import nats
 
@@ -56,19 +57,19 @@ def subscribe_handler(data):
 
     if data['event'] == 'start':
         logger.info('Job %s status set to running', data['id'])
-        job['events']['startTime'] = data['epoch']
+        job['events'].append({'time': data['epoch'], 'type': 'started'})
         job['status'] = 'running'
         job = update_job_start(job, data)
         job.save()
     elif data['event'] == 'success':
         logger.info('Job %s status set to completed', data['id'])
-        job['events']['endTime'] = data['epoch']
+        job['events'].append({'time': data['epoch'], 'type': 'completed'})
         job['status'] = 'completed'
         job = update_job(job, data)
         job.save()
     elif data['event'] in ('failed', 'killed', 'deleted'):
         logger.info('Job %s status set to %s', data['id'], data['event'])
-        job['events']['endTime'] = data['epoch']
+        job['events'].append({'time': data['epoch'], 'type': data['event']})
         job['status'] = data['event']
         job = update_job(job, data)
 
@@ -84,6 +85,7 @@ def subscribe_handler(data):
 
         if maximum_retries > 0 and retries < maximum_retries:
             job['status'] = 'pending'
+            job['events'].append({'time': time.time(), 'type': 'retrying'})
 
         job.save()
 
