@@ -43,6 +43,7 @@ async def create_job(job: Job = Body(...)):
     job['events'] = {}
     job['events']['createTime'] = time.time()
     job['execution'] = {}
+    job['execution']['retries'] = 0
     db.create_job(job)
     return JSONResponse(status_code=status.HTTP_201_CREATED, content={'id': job['id']})
 
