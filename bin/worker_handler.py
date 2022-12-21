@@ -44,7 +44,10 @@ async def run():
 
         js = nc.jetstream()
         kv = await js.key_value(bucket=config().get('nats', 'workers_bucket'))
-        await kv.put(data['name'], (json.dumps(data)).encode('utf-8'))
+        if data['status'] == 'leaving':
+            await kv.delete(data['name'])
+        else:
+            await kv.put(data['name'], (json.dumps(data)).encode('utf-8'))
 
     def signal_handler():
         if nc.is_closed:
