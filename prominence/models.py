@@ -100,6 +100,7 @@ class Execution(BaseModel):
         None, title="site", description="Site where the job ran"
     )
     cpu: Optional[CpuDetails] = Field(None, title="cpu", description="CPU details")
+    retries: Optional[int] = Field(0, title="retries", description="Retries")
     # maxMemoryUsageKB: Optional[int] = Field(..., title='maxMemoryUsageKB', description='Maximum memory usage of the job in KB')
     tasks: Optional[List[TaskExecution]] = Field(
         None, title="tasks", description="Task execution"
