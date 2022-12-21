@@ -48,6 +48,7 @@ class Database(object):
         """
         job = self._jobs.fetchDocument(id)
         job['status'] = 'deleting'
+        job['events'].append({'time': time.time(), 'type': 'deleting'})
         job.save()
 
     def get_pending_jobs(self):
