@@ -5,6 +5,32 @@ from typing import Optional, List
 from typing import Dict, List, Optional
 
 
+class JobPolicies(BaseModel):
+    """
+    Job policies
+    """
+    maximumRetries: Optional[int] = Field(
+        0,
+        title='maximumRetries',
+        description='Maximum retries'
+    )
+    maximumTaskRetries: Optional[int] = Field(
+        0,
+        title='maximumTaskRetries',
+        description='Maximum task retries'
+    )
+    maximumTimeInQueue: Optional[int] = Field(
+        0,
+        title='maximumTimeInQueue',
+        description='Maximum time in queue'
+    )
+    priority: Optional[int] = Field(
+        0,
+        title='priority',
+        description='Job priority'
+    )
+
+
 class Artifact(BaseModel):
     """
     Artifact
@@ -148,6 +174,9 @@ class Job(BaseModel):
     resources: Resources = Field(..., title="resources", description="Resources")
     artifacts: Optional[List[Artifact]] = Field(
         None, title="artifacts", description="Input artifacts"
+    )
+    policies: Optional[JobPolicies] = Field(
+        None, title='policies', description='Job policies'
     )
 
 
