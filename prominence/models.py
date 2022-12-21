@@ -100,13 +100,12 @@ class TaskExecution(BaseModel):
     )
 
 
-class Events(BaseModel):
+class Event(BaseModel):
     """
-    Times at which the job/workflow was submitted, started running and ended
+    Timestamp and event
     """
-    createTime: int = Field(..., title="createTime", description="Creation time")
-    startTime: Optional[int] = Field(None, title="startTime", description="Start time")
-    endTime: Optional[int] = Field(None, title="endTime", description="End time")
+    time: float = Field(..., title="time", description="Time")
+    type: str = Field(..., title="type", description="Type of event")
 
 
 class CpuDetails(BaseModel):
@@ -186,7 +185,7 @@ class JobOutput(Job):
     """
     id: str = Field(..., title="id", description="Job id")
     status: JobStatus = Field(..., title="status", description="Job status")
-    events: Events = Field(..., title="events", description="Job events")
+    events: Optional[List[Event]] = Field([], title="events", description="Job events")
     execution: Optional[Execution] = Field(
         ..., title="execution", description="Execution details"
     )
