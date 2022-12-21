@@ -30,6 +30,9 @@ def update_job(job, data):
     if 'execution' not in job:
         job['execution'] = {}
 
+    if 'worker' in data:
+        job['execution']['worker'] = data['worker']
+
     if 'details' in data:
         if 'site' in data['details']:
             job['execution']['site'] = data['details']['site']
@@ -40,9 +43,10 @@ def update_job(job, data):
             job['execution']['cpu']['vendor'] = data['details']['cpu_vendor']
         tasks = []
         if 'tasks' in data['details']:
-            for task in data['details']['tasks']:
-                if 'exitCode' in task:
-                    tasks.append(task)
+            if data['details']['tasks']:
+                for task in data['details']['tasks']:
+                    if 'exitCode' in task:
+                        tasks.append(task)
         if tasks:
             job['execution']['tasks'] = tasks
 
@@ -59,7 +63,7 @@ def subscribe_handler(data):
         logger.info('Job %s status set to running', data['id'])
         job['events'].append({'time': data['epoch'], 'type': 'started'})
         job['status'] = 'running'
-        job = update_job_start(job, data)
+        job = update_job(job, data)
         job.save()
     elif data['event'] == 'success':
         logger.info('Job %s status set to completed', data['id'])
