@@ -111,13 +111,13 @@ async def run():
     nc = None
     try:
         nc = await nats.connect(config().get('nats', 'url'),
+                                max_reconnect_attempts=-1,
                                 disconnected_cb=disconnected_cb,
                                 reconnected_cb=reconnected_cb,
                                 closed_cb=closed_cb,
                                 error_cb=error_cb)
     except Exception as err:
         logger.error('Got exception connecting to NATS: %s', str(err))
-        sys.exit(1)
 
     def signal_handler():
         if nc.is_closed:
@@ -141,7 +141,6 @@ async def run():
             pass
 
     await nc.close()
-
 
 def main():
     loop = asyncio.get_event_loop()
