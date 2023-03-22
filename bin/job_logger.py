@@ -30,13 +30,13 @@ async def run():
     nc = None
     try:
         nc = await nats.connect(config().get('nats', 'url'),
+                                max_reconnect_attempts=-1,
                                 disconnected_cb=disconnected_cb,
                                 reconnected_cb=reconnected_cb,
                                 closed_cb=closed_cb,
                                 error_cb=error_cb)
-    except Exception as e:
-        logger.error('Got exception connecting to NATS: %s', str(e))
-        sys.exit(1)
+    except Exception as err:
+        logger.error('Got exception connecting to NATS: %s', str(err))
 
     def signal_handler():
         if nc.is_closed:
@@ -69,7 +69,6 @@ def main():
         loop.run_forever()
     finally:
         loop.close()
-
 
 if __name__ == '__main__':
     main()
