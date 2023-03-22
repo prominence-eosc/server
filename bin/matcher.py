@@ -42,6 +42,7 @@ async def matcher():
     nc = None
     try:
         nc = await nats.connect(config().get('nats', 'url'),
+                                max_reconnect_attempts=-1,
                                 disconnected_cb=disconnected_cb,
                                 reconnected_cb=reconnected_cb,
                                 closed_cb=closed_cb,
