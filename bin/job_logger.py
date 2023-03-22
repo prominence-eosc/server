@@ -6,7 +6,7 @@ import nats
 
 from prominence.utilities import config, set_logger
 
-logger = set_logger(config().get('job_logger', 'log'))
+logger = set_logger(config().get('job_logger', 'log').replace('type', sys.argv[1]))
 
 def write_log(msg):
     subject = msg.subject
